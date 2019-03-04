@@ -83,11 +83,17 @@ local destdir = arg[2] or "out"
 
 lfs.mkdir(destdir)
 
+local version
 local f = io.open(string.format("%s/checksums.sha512", destdir), "w")
-
 for arch,rel in pairs(get_releases(branch, destdir)) do
 	local line = string.format("%s  %s/%s\n", rel.sha512, arch, rel.file)
 	f:write(line)
+	version=rel.version
 end
+f:close()
+
+-- write version
+f = io.open(string.format("%s/VERSION", destdir), "w")
+f:write(version)
 f:close()
 
