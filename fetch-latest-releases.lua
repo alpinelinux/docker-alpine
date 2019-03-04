@@ -10,7 +10,6 @@ local lfs = require("lfs")
 
 local mirror = "https://cz.alpinelinux.org/alpine"
 
-
 function fetch(url)
 	local headers, stream = assert(request.new_from_uri(url):go())
 	local body= assert(stream:get_body_as_string())
@@ -37,6 +36,11 @@ function fetch_file(url, outfile)
 	return os.rename(partfile, outfile)
 end
 
+function mkdockerfile(dir, rootfsfile)
+	local f = assert(io.open(string.format("%s/Dockerfile", dir), "w"))
+	f:write(string.format("FROM scratch\nADD %s /\nCMD [\"/bin/sh\"]\n", rootfsfile))
+	f:close()
+end
 
 function get_minirootfs(images, destdir)
 	for _,img in pairs(images) do
@@ -46,17 +50,14 @@ function get_minirootfs(images, destdir)
 					mirror, img.branch, img.arch, img.file)
 				local archdir = string.format("%s/%s", destdir, img.arch)
 				local ok, errmsg = lfs.mkdir(archdir)
-				if not ok then
-					return errormsg(errmsg)
-				end
 				fetch_file(url, string.format("%s/%s", archdir, img.file))
+				mkdockerfile(archdir, img.file)
 				print(img.file)
 			end
 			return { version=img.version, file=img.file, sha512=img.sha512 }
 		end
 	end
 end
-
 
 -- get array of minirootsfs releases --
 function get_releases(branch, destdir)
@@ -69,7 +70,7 @@ function get_releases(branch, destdir)
 				mirror, branch, arch)
 			local status, body = fetch(url)
 			if status == "200" then
-				t[arch] = get_minirootfs(yaml.load(body), destdir)
+				t[arch] = get_minirootfs((yaml.load(body)), destdir)
 			end
 		end)
 	end
@@ -78,23 +79,15 @@ function get_releases(branch, destdir)
 end
 
 local branch = arg[1] or "edge"
-local destdir = arg[2]
+local destdir = arg[2] or "out"
 
-local f
+lfs.mkdir(destdir)
 
-if destdir then
-	lfs.mkdir(destdir)
-	f = io.open(string.format("%s/checksums.sha512", destdir), "w")
-else
-	f = io.stdout
-end
+local f = io.open(string.format("%s/checksums.sha512", destdir), "w")
 
 for arch,rel in pairs(get_releases(branch, destdir)) do
 	local line = string.format("%s  %s/%s\n", rel.sha512, arch, rel.file)
 	f:write(line)
 end
-
-if f ~= io.stdout then
-	f:close()
-end
+f:close()
 
