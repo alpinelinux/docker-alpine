@@ -19,6 +19,10 @@ branch() {
 	local branch="$1"
 	local dir="$2"
 	local version=$(cat $dir/VERSION)
+	if [ -z "$dir" ]; then
+		help
+		exit 1
+	fi
 	echo "=> Creating branch for release $version from $dir"
 
 	if [ -n "$(git status --porcelain)" ]; then
@@ -38,12 +42,46 @@ branch() {
 	git commit -m "Update Alpine $branch - $version"
 
 	echo "=> Branch created:"
-	git log
 	echo ""
-	echo "=> To upload release do:"
+	echo "=> To upload release do: git push -f origin $branch"
+	library "$branch"
 	echo ""
-	echo "  git push -f origin $branch"
-	echo ""
+	echo "=> After 'git push -f origin $branch', add the above to:"
+	echo "=> https://github.com/docker-library/official-images/blob/master/library/alpine"
+	git checkout master
+}
+
+library_arch() {
+	case "$1" in
+	armhf) echo "arm32v6";;
+	armv7) echo "arm32v7";;
+	aarch64) echo "arm64v8";;
+	ppc64le) echo "ppc64le";;
+	s390x) echo "s390x";;
+	x86) echo "i386";;
+	x86_64) echo "amd64";;
+	*) echo "Unknown architecture: $1" >&2; exit 1;;
+	esac
+}
+
+library() {
+	local branch="$1"
+	local arches= dirs=
+	for file in */Dockerfile; do
+		local a=${file%/Dockerfile}
+		arches="${arches}${arches:+, }$(library_arch $a)"
+		dirs="$dirs $a"
+	done
+	cat <<-EOF
+
+		Tags: $branch
+		Architecture: $arches
+		GitFetch: refs/heads/$branch
+		GitCommit: $(git rev-parse HEAD)
+	EOF
+	for dir in $dirs; do
+		echo "$(library_arch $dir)-Directory: $dir/"
+	done
 }
 
 help() {
@@ -58,6 +96,8 @@ Commands:
  branch BRANCH DIR  - update git branch with previously prepared temp
                       directory
 
+ library BRANCH     - Print metadata for:
+                      https://github.com/docker-library/official-images
 EOF
 }
 
@@ -70,6 +110,7 @@ dir="$2"
 case "$cmd" in
 	prepare) prepare "$branch";;
 	branch)  branch "$branch" "$dir";;
+	library) library "$branch";;
 	*) help $0;;
 esac
 
