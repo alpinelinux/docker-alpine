@@ -31,7 +31,14 @@ function errormsg(...)
 end
 
 function fetch_file(url, outfile)
-	local headers, stream = assert(request.new_from_uri(url):go())
+	local headers, stream = request.new_from_uri(url):go()
+	if not headers then
+		fatal("Error: %s: %s", url, stream)
+	end
+	if headers:get(":status") ~= "200" then
+		fatal("Error: HTTP %s: %s", headers:get(":status"), url)
+	end
+
 	local partfile = string.format("%s.part", outfile)
 	local f, errmsg = io.open(partfile, "w")
 	if not f then
@@ -46,7 +53,11 @@ function fetch_file(url, outfile)
 end
 
 function mkdockerfile(dir, rootfsfile)
-	local f = assert(io.open(string.format("%s/Dockerfile", dir), "w"))
+	local filename = string.format("%s/Dockerfile", dir)
+	local f, err = io.open(filename, "w")
+	if not f then
+		fatal("Error: %s: %s", filename, err)
+	end
 	f:write(string.format("FROM scratch\nADD %s /\nCMD [\"/bin/sh\"]\n", rootfsfile))
 	f:close()
 end
