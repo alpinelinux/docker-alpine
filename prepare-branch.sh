@@ -1,6 +1,16 @@
 #!/bin/sh -e
 
 
+run_tests() {
+	local branch="$1"
+	local dir="$2"
+	local arch=$(uname -m)
+	local testimage="alpine:${branch#v}-test"
+	docker build -t "$testimage" "$dir/$arch/"
+	BRANCH="$branch" bats ./tests/common.bats
+	docker rmi "$testimage"
+}
+
 prepare() {
 	local branch="$1"
 	local dir=$(mktemp -d /tmp/docker-brew-alpine-XXXXXX)
@@ -9,11 +19,13 @@ prepare() {
 	echo "=> Verifying checksums"
 	( cd $dir && sha512sum -c checksums.sha512)
 	echo "=> temp dir: $dir"
+	run_tests "$branch" "$dir"
 	echo "=> To create git branch run:"
 	echo ""
 	echo "  $0 branch $branch $dir"
 	echo ""
 }
+
 
 branch() {
 	local branch="$1"
@@ -93,6 +105,8 @@ Commands:
  prepare [BRANCH]   - fetch release latest minirootfs to a temp directory and
                       create Dockerfiles
 
+ test BRANCH DIR    - run tests
+
  branch BRANCH DIR  - update git branch with previously prepared temp
                       directory
 
@@ -109,6 +123,7 @@ dir="$2"
 
 case "$cmd" in
 	prepare) prepare "$branch";;
+	test)    run_tests "$branch" "$dir";;
 	branch)  branch "$branch" "$dir";;
 	library) library "$branch";;
 	*) help $0;;
