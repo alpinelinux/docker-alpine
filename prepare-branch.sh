@@ -1,6 +1,5 @@
 #!/bin/sh -e
 
-
 run_tests() {
 	local branch="$1"
 	local dir="$2"
@@ -15,7 +14,11 @@ prepare() {
 	local branch="$1"
 	local dir=$(mktemp -d /tmp/docker-brew-alpine-XXXXXX)
 	docker build -t docker-brew-alpine-fetch .
-	docker run --user $(id -u) --rm -it -v $dir:/out docker-brew-alpine-fetch $branch /out
+	docker run \
+		${MIRROR+ -e "MIRROR=$MIRROR"} \
+		--user $(id -u) --rm -it \
+		-v $dir:/out \
+		docker-brew-alpine-fetch $branch /out
 	echo "=> Verifying checksums"
 	( cd $dir && sha512sum -c checksums.sha512)
 	echo "=> temp dir: $dir"

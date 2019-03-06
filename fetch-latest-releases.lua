@@ -8,7 +8,7 @@ local cqueues = require("cqueues")
 local yaml = require("lyaml")
 local lfs = require("lfs")
 
-local mirror = "https://cz.alpinelinux.org/alpine"
+local mirror = os.getenv("MIRROR") or "https://cz.alpinelinux.org/alpine"
 
 function fatal(...)
 	errormsg(...)
