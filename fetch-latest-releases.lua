@@ -104,8 +104,14 @@ local destdir = arg[2] or "out"
 lfs.mkdir(destdir)
 
 local version
+local releases = get_releases(branch, destdir)
+
+if next(releases) == nil then
+	fatal("No releases found on %s/%s/releases", mirror, branch)
+end
+
 local f = io.open(string.format("%s/checksums.sha512", destdir), "w")
-for arch,rel in pairs(get_releases(branch, destdir)) do
+for arch,rel in pairs(releases) do
 	local line = string.format("%s  %s/%s\n", rel.sha512, arch, rel.file)
 	f:write(line)
 	version=rel.version
