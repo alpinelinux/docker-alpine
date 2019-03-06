@@ -10,14 +10,23 @@ local lfs = require("lfs")
 
 local mirror = "https://cz.alpinelinux.org/alpine"
 
+function fatal(...)
+	errormsg(...)
+	os.exit(1)
+end
+
 function fetch(url)
-	local headers, stream = assert(request.new_from_uri(url):go())
-	local body= assert(stream:get_body_as_string())
+	local headers, stream = request.new_from_uri(url):go()
+	if not headers then
+		fatal("Error: %s: %s", url, stream)
+	end
+	local body = stream:get_body_as_string()
 	return headers:get(":status"), body
 end
 
-function errormsg(msg)
-	io.stderr:write(string.format("Error: %s: %s\n", errmsg, url))
+function errormsg(...)
+	local msg = string.format(...)
+	io.stderr:write(string.format("%s\n", msg))
 	return nil, msg
 end
 
@@ -26,12 +35,12 @@ function fetch_file(url, outfile)
 	local partfile = string.format("%s.part", outfile)
 	local f, errmsg = io.open(partfile, "w")
 	if not f then
-		return errormsg(errmsg)
+		return errormsg("Error: %s: %s:", file, errmsg)
 	end
 	local ok, errmsg, errnum = stream:save_body_to_file(f)
 	f:close()
 	if not ok then
-		return errormsg(errmsg)
+		return errormsg("Error: %s: %s", errmsg, url)
 	end
 	return os.rename(partfile, outfile)
 end
