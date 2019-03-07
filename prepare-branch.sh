@@ -81,7 +81,14 @@ library_arch() {
 
 library() {
 	local branch="$1"
+	local gitbranch=$(git rev-parse --abbrev-ref HEAD)
+	if [ "$gitbranch" != "$branch" ]; then
+		git checkout --quiet "$branch"
+	fi
+
 	local arches= dirs=
+	local version=$(cat VERSION)
+
 	for file in */Dockerfile; do
 		local a=${file%/Dockerfile}
 		arches="${arches}${arches:+, }$(library_arch $a)"
@@ -89,14 +96,18 @@ library() {
 	done
 	cat <<-EOF
 
-		Tags: $branch
-		Architecture: $arches
+		Tags: $version, ${branch#v}
+		Architectures: $arches
 		GitFetch: refs/heads/$branch
 		GitCommit: $(git rev-parse HEAD)
 	EOF
 	for dir in $dirs; do
 		echo "$(library_arch $dir)-Directory: $dir/"
 	done
+
+	if [ "$gitbranch" != "$branch" ]; then
+		git checkout --quiet "$gitbranch"
+	fi
 }
 
 help() {
