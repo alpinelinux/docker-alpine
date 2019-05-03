@@ -1,0 +1,45 @@
+= Usage
+
+== Packages
+Replacing your current base image with the Docker Alpine Linux image usually requires updating the package names to the corresponding ones in the https://pkgs.alpinelinux.org[Alpine Linux package index].
+We use the `apk` command to manage packages.
+It works similarly to `apt` and `yum`.
+
+For example, installing the `nginx` package would be done by running `apk add --no-cache nginx`.
+The `--no-cache` argument prevents `apk` from caching the package index - something that would normally take up precious space, as well as go stale quickly.
+
+=== Example
+This is an example of a complete Dockerfile for `nginx`:
+[source, docker]
+----
+FROM alpine
+
+RUN apk --no-cache add nginx
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+----
+
+=== Virtual Packages
+Another great `apk` feature is the concept of user-defined virtual packages.
+Packages added under a virtual package name can later be removed as one group.
+An example use-case would be removing all build dependencies at once, as in this example:
+[source, docker]
+----
+FROM alpine
+
+WORKDIR /myapp
+COPY . /myapp
+
+RUN apk add --no-cache python py-pip openssl ca-certificates
+RUN apk add --no-cache --virtual build-dependencies python-dev build-base wget \
+  && pip install -r requirements.txt \
+  && python setup.py install \
+  && apk del build-dependencies
+
+CMD ["myapp", "start"]
+----
+
+// COMBAK: update docs link
+=== Further Details
+For further details on `apk` and how it's used, you can look at https://docs.alpinelinux.org/user-handbook/0.1a/Working/apk.html[Alpine's User Documentation] for it.

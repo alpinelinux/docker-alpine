@@ -1,0 +1,24 @@
+= Caveats
+
+The musl libc may work differently than what you are used to.
+Musl's https://wiki.musl-libc.org/functional-differences-from-glibc.html[functional differences from glibc] document does a good job of outlining everything.
+Please do go over it.
+This document will outline the most common kinds of issues you are likely to find.
+
+== Incompatible Binaries
+
+While there are binaries that will run on musl libc without needing to be recompiled, you will likely encounter binaries and applications that rely on specific glibc functionality that will fail to start up.
+An example of this would be Oracle's Java implementation, which relies on specific symbols only found in glibc.
+You can often use ldd to determine the exact symbol:
+[source]
+----
+# ldd bin/java
+    /lib64/ld-linux-x86-64.so.2 (0x7f542ebb5000)
+    libpthread.so.0 => /lib64/ld-linux-x86-64.so.2 (0x7f542ebb5000)
+    libjli.so => bin/../lib/amd64/jli/libjli.so (0x7f542e9a0000)
+    libdl.so.2 => /lib64/ld-linux-x86-64.so.2 (0x7f542ebb5000)
+    libc.so.6 => /lib64/ld-linux-x86-64.so.2 (0x7f542ebb5000)
+Error relocating bin/../lib/amd64/jli/libjli.so: __rawmemchr: symbol not found
+----
+In this case, upstream would need to remove the dependency on the offending symbol, or offer you the ability to compile the software natively on a musl-based system.
+Be sure to check the https://pkgs.alpinelinux.org[Alpine Linux package index] to see if a suitable replacement package already exists.

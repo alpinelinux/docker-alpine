@@ -1,0 +1,73 @@
+= docker-alpine
+
+:ao: alpinelinux.org
+:hubp: _/alpine
+:hub: https://hub.docker.com/r/{hubp}/
+
+image:https://img.shields.io/docker/stars/{hubp}.svg[link={hub}]
+image:https://img.shields.io/docker/pulls/{hubp}.svg[link={hub}]
+
+The official Docker image for https://{ao}[Alpine Linux].
+The image is only 5MB and has access to a package repository that is much more featureful than other BusyBox based images.
+
+== Why
+Docker images today are big.
+Usually much larger than they need to be.
+There are a lot of ways to make them smaller, but the Docker populace still jumps to the `ubuntu` base image for most projects.
+The size savings over `ubuntu` and other bases are huge:
+[source]
+----
+REPOSITORY  TAG     IMAGE ID      CREATED         SIZE
+alpine      latest  cbc475bbc33b  55 seconds ago  5.53MB
+ubuntu      latest  d131e0fa2585  7 days ago      102MB
+debian      latest  2d337f242f07  5 weeks ago     101MB
+centos      latest  9f38484d220f  7 weeks ago     202MB
+----
+There are images such as `progrium/busybox` which get us close to a minimal container and package system, but these particular BusyBox builds piggyback on the OpenWRT package index, which is often lacking and not tailored towards generic everyday applications.
+Alpine Linux has a much more featureful and up to date https://pkgs.{ao}[Package Index]:
+[source]
+----
+$ docker run progrium/busybox opkg-install nodejs
+Unknown package 'nodejs'.
+Collected errors:
+ * opkg_install_cmd: Cannot install package nodejs.
+
+$ docker run alpine apk add --no-cache nodejs
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.9/main/x86_64/APKINDEX.tar.gz
+fetch http://dl-cdn.alpinelinux.org/alpine/v3.9/community/x86_64/APKINDEX.tar.gz
+(1/7) Installing ca-certificates (20190108-r0)
+(2/7) Installing c-ares (1.15.0-r0)
+(3/7) Installing libgcc (8.3.0-r0)
+(4/7) Installing http-parser (2.8.1-r0)
+(5/7) Installing libstdc++ (8.3.0-r0)
+(6/7) Installing libuv (1.23.2-r0)
+(7/7) Installing nodejs (10.14.2-r0)
+Executing busybox-1.29.3-r10.trigger
+Executing ca-certificates-20190108-r0.trigger
+OK: 31 MiB in 21 packages
+----
+This makes Alpine Linux a great image base for utilities, as well as production applications.
+https://www.{ao}/about/[Read more about Alpine Linux here] and it will become obvious how its mantra fits in right at home with Docker images.
+
+NOTE: All of the example outputs above were last generated/updated on May 3rd 2019.
+
+== Usage
+Stop doing this:
+[source, docker]
+----
+FROM ubuntu-debootstrap:14.04
+RUN apt-get update -q \
+  && DEBIAN_FRONTEND=noninteractive apt-get install -qy mysql-client \
+  && apt-get clean \
+  && rm -rf /var/lib/apt
+ENTRYPOINT ["mysql"]
+----
+This took 28 seconds to build and yields a 169 MB image.
+Start doing this:
+[source, docker]
+----
+FROM alpine:3.9
+RUN apk add --no-cache mysql-client
+ENTRYPOINT ["mysql"]
+----
+Only 4 seconds to build and results in a 41 MB image!

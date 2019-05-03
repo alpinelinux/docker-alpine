@@ -1,0 +1,13 @@
+= Build
+
+Normally, it is sufficient to simply run `docker pull alpine:tag` to get a locally cached image.
+However, you can use the scripts present in this repository to build your own local copies.
+
+== Automatic
+You can use `prepare-branch.sh` in order to generate the tarballs and Dockerfiles necessary to create an Alpine image for all of the supported architectures.
+Simply decide which release of alpine you wish to be able to build (such as `v3.9` or `edge`) and call the `prepare` function of `prepare-branch.sh`.
+For example, to generate edge images, you would run `prepare-branch.sh prepare edge`.
+This will create a directory under `/tmp`, download release tarballs for the selected version, generate necessary Dockerfiles, run tests and print the directory.
+At that point, you may enter it and use any of the desired Dockerfiles as per usual.
+
+CAUTION: This process currently relies on Alpine already being available as a specific tagged image.
