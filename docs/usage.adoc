@@ -10,7 +10,7 @@ The `--no-cache` argument prevents `apk` from caching the package index - someth
 
 === Example
 This is an example of a complete Dockerfile for `nginx`:
-[source, docker]
+[source, dockerfile]
 ----
 FROM alpine
 
@@ -24,7 +24,7 @@ CMD ["nginx", "-g", "daemon off;"]
 Another great `apk` feature is the concept of user-defined virtual packages.
 Packages added under a virtual package name can later be removed as one group.
 An example use-case would be removing all build dependencies at once, as in this example:
-[source, docker]
+[source, dockerfile]
 ----
 FROM alpine
 

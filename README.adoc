@@ -53,7 +53,7 @@ NOTE: All of the example outputs above were last generated/updated on May 3rd 20
 
 == Usage
 Stop doing this:
-[source, docker]
+[source, dockerfile]
 ----
 FROM ubuntu-debootstrap:14.04
 RUN apt-get update -q \
@@ -64,7 +64,7 @@ ENTRYPOINT ["mysql"]
 ----
 This took 28 seconds to build and yields a 169 MB image.
 Start doing this:
-[source, docker]
+[source, dockerfile]
 ----
 FROM alpine:3.9
 RUN apk add --no-cache mysql-client
