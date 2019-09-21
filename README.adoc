@@ -17,11 +17,11 @@ There are a lot of ways to make them smaller, but the Docker populace still jump
 The size savings over `ubuntu` and other bases are huge:
 [source]
 ----
-REPOSITORY  TAG     IMAGE ID      CREATED         SIZE
-alpine      latest  cbc475bbc33b  55 seconds ago  5.53MB
-ubuntu      latest  d131e0fa2585  7 days ago      102MB
-debian      latest  2d337f242f07  5 weeks ago     101MB
-centos      latest  9f38484d220f  7 weeks ago     202MB
+REPOSITORY  TAG     IMAGE ID      CREATED      SIZE
+alpine      latest  961769676411  4 weeks ago  5.58MB
+ubuntu      latest  2ca708c1c9cc  2 days ago   64.2MB
+debian      latest  c2c03a296d23  9 days ago   114MB
+centos      latest  67fa590cfc1c  4 weeks ago  202MB
 ----
 There are images such as `progrium/busybox` which get us close to a minimal container and package system, but these particular BusyBox builds piggyback on the OpenWRT package index, which is often lacking and not tailored towards generic everyday applications.
 Alpine Linux has a much more featureful and up to date https://pkgs.{ao}[Package Index]:
