@@ -16,7 +16,7 @@ prepare() {
 	docker build -t docker-brew-alpine-fetch .
 	docker run \
 		${MIRROR+ -e "MIRROR=$MIRROR"} \
-		--user $(id -u) --rm -it \
+		--user $(id -u) --rm \
 		-v $dir:/out \
 		docker-brew-alpine-fetch $branch /out
 	echo "=> Verifying checksums"
