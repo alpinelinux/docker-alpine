@@ -8,14 +8,16 @@ local cqueues = require("cqueues")
 local yaml = require("lyaml")
 local lfs = require("lfs")
 
-local mirror = os.getenv("MIRROR") or "https://cz.alpinelinux.org/alpine"
+local m = {}
+m.mirror = os.getenv("MIRROR") or "https://cz.alpinelinux.org/alpine"
 
-function fatal(...)
-	errormsg(...)
+
+function m.fatal(...)
+	m.errormsg(...)
 	os.exit(1)
 end
 
-function fetch(url)
+function m.fetch(url)
 	local headers, stream = request.new_from_uri(url):go()
 	if not headers then
 		fatal("Error: %s: %s", url, stream)
@@ -24,13 +26,13 @@ function fetch(url)
 	return headers:get(":status"), body
 end
 
-function errormsg(...)
+function m.errormsg(...)
 	local msg = string.format(...)
 	io.stderr:write(string.format("%s\n", msg))
 	return nil, msg
 end
 
-function fetch_file(url, outfile)
+function m.fetch_file(url, outfile)
 	local headers, stream = request.new_from_uri(url):go()
 	if not headers then
 		fatal("Error: %s: %s", url, stream)
@@ -52,7 +54,7 @@ function fetch_file(url, outfile)
 	return os.rename(partfile, outfile)
 end
 
-function mkdockerfile(dir, rootfsfile)
+function m.mkdockerfile(dir, rootfsfile)
 	local filename = string.format("%s/Dockerfile", dir)
 	local f, err = io.open(filename, "w")
 	if not f then
@@ -62,35 +64,41 @@ function mkdockerfile(dir, rootfsfile)
 	f:close()
 end
 
-function get_minirootfs(images, destdir)
+function m.minirootfs_image(images)
 	for _,img in pairs(images) do
 		if img.flavor == "alpine-minirootfs" then
-			if destdir then
-				local url = string.format("%s/%s/releases/%s/%s",
-					mirror, img.branch, img.arch, img.file)
-				local archdir = string.format("%s/%s", destdir, img.arch)
-				local ok, errmsg = lfs.mkdir(archdir)
-				fetch_file(url, string.format("%s/%s", archdir, img.file))
-				mkdockerfile(archdir, img.file)
-				print(img.file)
-			end
-			return { version=img.version, file=img.file, sha512=img.sha512 }
+			return img
 		end
 	end
+	return nil
+end
+
+function m.get_minirootfs(images, destdir)
+	local img = m.minirootfs_image(images)
+	if destdir then
+		local url = string.format("%s/%s/releases/%s/%s",
+			m.mirror, img.branch, img.arch, img.file)
+		local archdir = string.format("%s/%s", destdir, img.arch)
+		local ok, errmsg = lfs.mkdir(archdir)
+		m.fetch_file(url, string.format("%s/%s", archdir, img.file))
+		m.mkdockerfile(archdir, img.file)
+		print(img.file)
+	end
+	return { version=img.version, file=img.file, sha512=img.sha512 }
 end
 
 -- get array of minirootsfs releases --
-function get_releases(branch, destdir)
+function m.get_releases(branch, destdir)
 	local arches = { "aarch64", "armhf", "armv7", "ppc64le" , "s390x", "x86", "x86_64" }
 	local t = {}
 	local loop = cqueues.new()
 	for _, arch in pairs(arches) do
 		loop:wrap(function()
 			local url = string.format("%s/%s/releases/%s/latest-releases.yaml",
-				mirror, branch, arch)
-			local status, body = fetch(url)
+				m.mirror, branch, arch)
+			local status, body = m.fetch(url)
 			if status == "200" then
-				t[arch] = get_minirootfs((yaml.load(body)), destdir)
+				t[arch] = m.get_minirootfs((yaml.load(body)), destdir)
 			end
 		end)
 	end
@@ -100,9 +108,7 @@ end
 
 -- return functions as module for unit testing
 if not string.match(arg[0], "fetch%-latest%-releases") then
-	return {
-		fatal = fatal,
-	}
+	return m
 end
 
 local branch = arg[1] or "edge"
@@ -114,7 +120,7 @@ local version
 local releases = get_releases(branch, destdir)
 
 if next(releases) == nil then
-	fatal("No releases found on %s/%s/releases", mirror, branch)
+	fatal("No releases found on %s/%s/releases", m.mirror, branch)
 end
 
 local f = io.open(string.format("%s/checksums.sha512", destdir), "w")
