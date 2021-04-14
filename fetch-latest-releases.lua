@@ -98,6 +98,13 @@ function get_releases(branch, destdir)
 	return t
 end
 
+-- return functions as module for unit testing
+if not string.match(arg[0], "fetch%-latest%-releases") then
+	return {
+		fatal = fatal,
+	}
+end
+
 local branch = arg[1] or "edge"
 local destdir = arg[2] or "out"
 
