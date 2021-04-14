@@ -1,5 +1,7 @@
 #!/bin/sh -e
 
+set -e
+
 run_tests() {
 	local branch="$1"
 	local dir="$2"

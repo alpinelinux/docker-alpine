@@ -20,7 +20,7 @@ end
 function m.fetch(url)
 	local headers, stream = request.new_from_uri(url):go()
 	if not headers then
-		fatal("Error: %s: %s", url, stream)
+		m.fatal("Error: %s: %s", url, stream)
 	end
 	local body = stream:get_body_as_string()
 	return headers:get(":status"), body
@@ -35,10 +35,10 @@ end
 function m.fetch_file(url, outfile)
 	local headers, stream = request.new_from_uri(url):go()
 	if not headers then
-		fatal("Error: %s: %s", url, stream)
+		m.fatal("Error: %s: %s", url, stream)
 	end
 	if headers:get(":status") ~= "200" then
-		fatal("Error: HTTP %s: %s", headers:get(":status"), url)
+		m.fatal("Error: HTTP %s: %s", headers:get(":status"), url)
 	end
 
 	local partfile = string.format("%s.part", outfile)
@@ -58,7 +58,7 @@ function m.mkdockerfile(dir, rootfsfile)
 	local filename = string.format("%s/Dockerfile", dir)
 	local f, err = io.open(filename, "w")
 	if not f then
-		fatal("Error: %s: %s", filename, err)
+		m.fatal("Error: %s: %s", filename, err)
 	end
 	f:write(string.format("FROM scratch\nADD %s /\nCMD [\"/bin/sh\"]\n", rootfsfile))
 	f:close()
@@ -106,6 +106,20 @@ function m.get_releases(branch, destdir)
 	return t
 end
 
+function m.equal_versions(releases)
+	local prev = nil
+	for arch, img in pairs(releases) do
+		if prev == nil then
+			prev = img.version
+		end
+		if prev ~= img.version then
+			return false, arch
+		end
+		prev = img.version
+	end
+	return true
+end
+
 -- return functions as module for unit testing
 if not string.match(arg[0], "fetch%-latest%-releases") then
 	return m
@@ -117,10 +131,14 @@ local destdir = arg[2] or "out"
 lfs.mkdir(destdir)
 
 local version
-local releases = get_releases(branch, destdir)
+local releases = m.get_releases(branch, destdir)
 
 if next(releases) == nil then
-	fatal("No releases found on %s/%s/releases", m.mirror, branch)
+	m.fatal("No releases found on %s/%s/releases", m.mirror, branch)
+end
+
+if not m.equal_versions(releases) then
+	m.fatal("not all versions are equal")
 end
 
 local f = io.open(string.format("%s/checksums.sha512", destdir), "w")
