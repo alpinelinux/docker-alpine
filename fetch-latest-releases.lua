@@ -55,13 +55,22 @@ function m.fetch_file(url, outfile)
 end
 
 function m.mkdockerfile(dir, rootfsfile)
-	local filename = string.format("%s/Dockerfile", dir)
-	local f, err = io.open(filename, "w")
-	if not f then
-		m.fatal("Error: %s: %s", filename, err)
+	local entrypoint = string.format("%s/init", dir)
+	local entry, err = io.open(entrypoint, "w")
+	if not entry then
+		m.fatal("Error: %s: %s", entrypoint, err)
 	end
-	f:write(string.format("FROM scratch\nADD %s /\nCMD [\"/bin/sh\"]\n", rootfsfile))
-	f:close()
+	entry:write('#!/bin/sh\nfor f in /etc/entrypoint.d/*; do\n  [ ! -x "$f" ] && continue\n  "$f"\ndone\nexec "$@"\n')
+	entry:close()
+	os.execute(string.format('chmod +x %s', entrypoint))
+
+	local dockerfile = string.format("%s/Dockerfile", dir)
+	local dock, err = io.open(dockerfile, "w")
+	if not dock then
+		m.fatal("Error: %s: %s", dockerfile, err)
+	end
+	dock:write(string.format('FROM scratch\nADD %s /\nCOPY init /bin\nENTRYPOINT ["/bin/init"]\nCMD ["/bin/sh"]\n', rootfsfile))
+	dock:close()
 end
 
 function m.minirootfs_image(images)
@@ -153,4 +162,3 @@ f:close()
 f = io.open(string.format("%s/VERSION", destdir), "w")
 f:write(version)
 f:close()
-

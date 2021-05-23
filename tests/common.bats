@@ -62,3 +62,7 @@ setup() {
   docker rm $container
 }
 
+@test "entrypoints in /etc/entrypoint.d should run" {
+  r="$(docker run --rm -v $(pwd)/tests/entrypoint.sh:/etc/entrypoint.d/hello alpine:$TAG)"
+  [ "$r" = "hello from entrypoint" ]
+}
