@@ -74,6 +74,7 @@ library_arch() {
 	armv7) echo "arm32v7";;
 	aarch64) echo "arm64v8";;
 	ppc64le) echo "ppc64le";;
+	riscv64) echo "riscv64";;
 	s390x) echo "s390x";;
 	x86) echo "i386";;
 	x86_64) echo "amd64";;
