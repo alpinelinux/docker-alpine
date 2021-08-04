@@ -89,7 +89,7 @@ end
 
 -- get array of minirootsfs releases --
 function m.get_releases(branch, destdir)
-	local arches = { "aarch64", "armhf", "armv7", "ppc64le" , "s390x", "x86", "x86_64" }
+	local arches = { "aarch64", "armhf", "armv7", "ppc64le" , "riscv64", "s390x", "x86", "x86_64" }
 	local t = {}
 	local loop = cqueues.new()
 	for _, arch in pairs(arches) do
