@@ -29,6 +29,7 @@ prepare() {
 	echo ""
 	echo "  $0 branch $branch $dir"
 	echo ""
+	TMPDIR="$dir"
 }
 
 
@@ -143,6 +144,10 @@ case "$cmd" in
 	test)    run_tests "$branch" "$dir";;
 	branch)  branch "$branch" "$dir";;
 	library) library "$branch";;
+	all)
+		prepare "$branch"
+		branch "$branch" "$TMPDIR"
+		;;
 	*) help $0;;
 esac
 
