@@ -52,7 +52,7 @@ setup() {
 @test "root login is disabled" {
   run docker run --rm alpine:$TAG awk -F: '$1=="root"{print $2}' /etc/shadow
   [ $status -eq 0 ]
-  [ "$output" = "!" ]
+  [ "$output" = "*" ] || [ "$output" = "!" ]
 }
 
 @test "/dev/null should be missing" {
