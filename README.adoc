@@ -55,7 +55,7 @@ NOTE: All of the example outputs above were last generated/updated on May 3rd 20
 Stop doing this:
 [source, dockerfile]
 ----
-FROM ubuntu-debootstrap:22.04
+FROM ubuntu:22.04
 RUN apt-get update -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -qy mysql-client \
   && apt-get clean \
