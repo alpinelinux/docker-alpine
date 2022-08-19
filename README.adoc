@@ -55,7 +55,7 @@ NOTE: All of the example outputs above were last generated/updated on May 3rd 20
 Stop doing this:
 [source, dockerfile]
 ----
-FROM ubuntu-debootstrap:14.04
+FROM ubuntu:22.04
 RUN apt-get update -q \
   && DEBIAN_FRONTEND=noninteractive apt-get install -qy mysql-client \
   && apt-get clean \
@@ -66,7 +66,7 @@ This took 28 seconds to build and yields a 169 MB image.
 Start doing this:
 [source, dockerfile]
 ----
-FROM alpine:3.9
+FROM alpine:3.16
 RUN apk add --no-cache mysql-client
 ENTRYPOINT ["mysql"]
 ----
