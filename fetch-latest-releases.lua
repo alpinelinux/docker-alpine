@@ -1,7 +1,7 @@
 #!/usr/bin/lua5.3
 
 -- script to fetch and parse latest-releases.yaml from master site
--- and fetch the latest minitootfs images for all available branches
+-- and fetch the latest minirootfs images for all available branches
 
 local request = require("http.request")
 local cqueues = require("cqueues")
