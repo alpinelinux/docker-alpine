@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Package-specific issues
+    url: https://gitlab.alpinelinux.org/alpine/aports/-/issues
+    about: For a single or multiple packages, and not specific to containers
+  - name: Community support
+    url: https://alpinelinux.org/community/
+    about: If you need help and or have support questions
