@@ -11,7 +11,6 @@ local lfs = require("lfs")
 local m = {}
 m.mirror = os.getenv("MIRROR") or "https://cz.alpinelinux.org/alpine"
 
-
 function m.fatal(...)
 	m.errormsg(...)
 	os.exit(1)
@@ -60,12 +59,12 @@ function m.mkdockerfile(dir, rootfsfile)
 	if not f then
 		m.fatal("Error: %s: %s", filename, err)
 	end
-	f:write(string.format("FROM scratch\nADD %s /\nCMD [\"/bin/sh\"]\n", rootfsfile))
+	f:write(string.format('FROM scratch\nADD %s /\nCMD ["/bin/sh"]\n', rootfsfile))
 	f:close()
 end
 
 function m.minirootfs_image(images)
-	for _,img in pairs(images) do
+	for _, img in pairs(images) do
 		if img.flavor == "alpine-minirootfs" then
 			return img
 		end
@@ -76,26 +75,24 @@ end
 function m.get_minirootfs(images, destdir)
 	local img = m.minirootfs_image(images)
 	if destdir then
-		local url = string.format("%s/%s/releases/%s/%s",
-			m.mirror, img.branch, img.arch, img.file)
+		local url = string.format("%s/%s/releases/%s/%s", m.mirror, img.branch, img.arch, img.file)
 		local archdir = string.format("%s/%s", destdir, img.arch)
 		local ok, errmsg = lfs.mkdir(archdir)
 		m.fetch_file(url, string.format("%s/%s", archdir, img.file))
 		m.mkdockerfile(archdir, img.file)
 		print(img.file)
 	end
-	return { version=img.version, file=img.file, sha512=img.sha512 }
+	return { version = img.version, file = img.file, sha512 = img.sha512 }
 end
 
 -- get array of minirootsfs releases --
 function m.get_releases(branch, destdir)
-	local arches = { "aarch64", "armhf", "armv7", "ppc64le" , "riscv64", "s390x", "x86", "x86_64" }
+	local arches = { "aarch64", "armhf", "armv7", "ppc64le", "riscv64", "s390x", "x86", "x86_64" }
 	local t = {}
 	local loop = cqueues.new()
 	for _, arch in pairs(arches) do
 		loop:wrap(function()
-			local url = string.format("%s/%s/releases/%s/latest-releases.yaml",
-				m.mirror, branch, arch)
+			local url = string.format("%s/%s/releases/%s/latest-releases.yaml", m.mirror, branch, arch)
 			local status, body = m.fetch(url)
 			if status == "200" then
 				t[arch] = m.get_minirootfs((yaml.load(body)), destdir)
@@ -142,10 +139,10 @@ if not m.equal_versions(releases) then
 end
 
 local f = io.open(string.format("%s/checksums.sha512", destdir), "w")
-for arch,rel in pairs(releases) do
+for arch, rel in pairs(releases) do
 	local line = string.format("%s  %s/%s\n", rel.sha512, arch, rel.file)
 	f:write(line)
-	version=rel.version
+	version = rel.version
 end
 f:close()
 
@@ -153,4 +150,3 @@ f:close()
 f = io.open(string.format("%s/VERSION", destdir), "w")
 f:write(version)
 f:close()
-
