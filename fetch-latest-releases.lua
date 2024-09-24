@@ -59,7 +59,7 @@ function m.mkdockerfile(dir, rootfsfile)
 	if not f then
 		m.fatal("Error: %s: %s", filename, err)
 	end
-	f:write(string.format('FROM scratch\nADD %s /\nCMD ["/bin/sh"]\n', rootfsfile))
+	f:write(string.format('FROM scratch\nCOPY %s /\nCMD ["/bin/sh"]\n', rootfsfile))
 	f:close()
 end
 
