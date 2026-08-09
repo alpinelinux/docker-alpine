@@ -66,7 +66,7 @@ branch() {
 	echo ""
 	echo "=> After 'git push -f origin $branch', add the above to:"
 	echo "=> https://github.com/docker-library/official-images/blob/master/library/alpine"
-	git checkout master
+	git checkout -f master
 }
 
 library_arch() {
